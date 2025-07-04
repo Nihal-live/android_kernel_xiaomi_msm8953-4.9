@@ -3,7 +3,7 @@ name: Build Kernel for Vince
 on:
   push:
     branches:
-      - master  # Change if your branch name is different
+      - PWR  # Change if your branch name is different
 
 jobs:
   build:
