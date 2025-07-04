@@ -1,0 +1,29 @@
+name: Kernel Build
+on: [workflow_dispatch]
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Environment
+        run: |
+          sudo apt update
+          sudo apt install -y gcc-aarch64-linux-gnu make libssl-dev bc
+          sudo apt install --reinstall ca-certificates
+          sudo update-ca-certificates --fresh
+
+      - name: Add WireGuard
+        run: |
+          git clone https://git.zx2c4.com/wireguard-linux-compat net/wireguard
+          echo "CONFIG_WIREGUARD=y" >> arch/arm64/configs/mido_defconfig
+
+      - name: Build Kernel
+        run: |
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- mido_defconfig
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- -j$(nproc)
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Kernel-Image
+          path: arch/arm64/boot/Image.gz-dtb
