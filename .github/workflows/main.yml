@@ -1,0 +1,17 @@
+name: Kernel Build
+on: [workflow_dispatch]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Build
+      run: |
+        sudo apt update
+        sudo apt install gcc-aarch64-linux-gnu
+        make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- mido_defconfig
+        make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- -j$(nproc)
+    - uses: actions/upload-artifact@v3
+      with:
+        name: Kernel
+        path: arch/arm64/boot/Image.gz-dtb
