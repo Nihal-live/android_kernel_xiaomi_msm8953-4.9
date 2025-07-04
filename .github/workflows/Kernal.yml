@@ -3,7 +3,7 @@ name: Build Kernel for Vince
 on:
   push:
     branches:
-      - PWR  # Change if your branch name is different
+      - PWR  # Change this if your default branch is different
 
 jobs:
   build:
@@ -12,7 +12,7 @@ jobs:
 
     steps:
     - name: Checkout Kernel Source
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
     - name: Set up dependencies
       run: |
@@ -44,7 +44,7 @@ jobs:
           LLVM=1
 
     - name: Upload Kernel Image
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
-        name: Kernel Image
+        name: Kernel-Image
         path: out/arch/arm64/boot/Image.gz-dtb
