@@ -6,22 +6,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Environment
+      - name: Fix SSL and Dependencies
         run: |
-          sudo apt update
-          sudo apt install -y gcc-aarch64-linux-gnu make libssl-dev bc
-          sudo apt install --reinstall ca-certificates
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu make libssl-dev bc python3
+          sudo apt-get install --reinstall ca-certificates
           sudo update-ca-certificates --fresh
 
-      - name: Add WireGuard
+      - name: Patch WireGuard Requirement
         run: |
-          git clone https://git.zx2c4.com/wireguard-linux-compat net/wireguard
-          echo "CONFIG_WIREGUARD=y" >> arch/arm64/configs/mido_defconfig
+          sed -i '/source "net\/wireguard\/Kconfig"/d' net/Kconfig || true
+          echo "CONFIG_WIREGUARD=n" >> arch/arm64/configs/mido_defconfig
 
       - name: Build Kernel
+        env:
+          ARCH: arm64
+          CROSS_COMPILE: aarch64-linux-gnu-
         run: |
-          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- mido_defconfig
-          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- -j$(nproc)
+          make mido_defconfig
+          make -j$(nproc)
 
       - uses: actions/upload-artifact@v4
         with:
