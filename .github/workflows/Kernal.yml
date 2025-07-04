@@ -1,0 +1,50 @@
+name: Build Kernel for Vince
+
+on:
+  push:
+    branches:
+      - master  # Change if your branch name is different
+
+jobs:
+  build:
+    name: Compile Kernel
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Kernel Source
+      uses: actions/checkout@v2
+
+    - name: Set up dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y bc bison build-essential ccache curl flex git libssl-dev \
+            libncurses5-dev libelf-dev make python-is-python3 unzip wget xz-utils
+
+    - name: Clone Proton Clang
+      run: |
+        git clone --depth=1 https://github.com/kdrag0n/proton-clang clang
+
+    - name: Build Kernel
+      run: |
+        export KERNEL_ROOT=$PWD
+        export CLANG_PATH=$KERNEL_ROOT/clang
+        export PATH=$CLANG_PATH/bin:$PATH
+        export ARCH=arm64
+        export SUBARCH=arm64
+
+        mkdir -p out
+
+        make O=out ARCH=arm64 perf-vince_defconfig
+        make -j$(nproc) O=out \
+          ARCH=arm64 \
+          CROSS_COMPILE=aarch64-linux-gnu- \
+          CC=clang \
+          CLANG_TRIPLE=aarch64-linux-gnu- \
+          LD=ld.lld \
+          LLVM=1
+
+    - name: Upload Kernel Image
+      uses: actions/upload-artifact@v2
+      with:
+        name: Kernel Image
+        path: out/arch/arm64/boot/Image.gz-dtb
